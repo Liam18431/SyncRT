@@ -38,49 +38,6 @@ inline G4ThreeVector SampleCircularSource(double radius)
 	return G4ThreeVector(x, y, z);
 }
 
-#if 0
-inline G4ThreeVector SampleSphericalSource(double radius)
-{
-	double sample_radius = std::cbrt(G4UniformRand()) * radius;
-
-	double sample_theta = G4UniformRand() * 2 * SRT::pi_;
-	double sample_phi = std::acos(G4UniformRand() * 2 - 1);
-
-	double sin_theta = std::sin(sample_theta);
-	double cos_theta = std::cos(sample_theta);
-	double sin_phi = std::sin(sample_phi);
-	double cos_phi = std::cos(sample_phi);
-
-	double x = sample_radius * cos_theta * sin_phi;
-	double y = sample_radius * sin_theta * sin_phi;
-	double z = sample_radius * cos_phi;
-
-	//double x = sample_radius * std::sqrt(1 - cos_phi * cos_phi) * cos_theta;
-	//double y = sample_radius * std::sqrt(1 - cos_phi * cos_phi) * sin_theta;
-	//double z = sample_radius * cos_phi;
-
-	return G4ThreeVector(x, y, z);
-}
-
-#else
-
-inline G4ThreeVector SampleSphericalSource(double diameter)
-{
-	double X1 = G4RandGauss::shoot(0, 1);
-	double X2 = G4RandGauss::shoot(0, 1);
-	double X3 = G4RandGauss::shoot(0, 1);
-	double mag = std::sqrt(X1 * X1 + X2 * X2 + X3 * X3);
-
-	double radius = std::cbrt(G4UniformRand()) * diameter / 2.0;
-
-	double x = radius * X1 / mag;
-	double y = radius * X2 / mag;
-	double z = radius * X3 / mag;
-
-	return G4ThreeVector(x, y, z);
-}
-#endif
-
 inline G4ThreeVector SampleMRTSource(double field_width, double field_height, double microbeam_width, double ctc)
 {
 	double x = 0;
@@ -119,7 +76,6 @@ void SRT::PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 	/* BB */
 	//G4ThreeVector sample = SampleRectangularSource(field_width, field_height);
 	//G4ThreeVector sample = SampleCircularSource(radius);
-	//G4ThreeVector sample = SampleSphericalSource(radius);
 
 	G4ThreeVector position = sample + offset;
 	this->particle_gun->SetParticlePosition(position);
