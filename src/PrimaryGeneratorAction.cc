@@ -98,8 +98,8 @@ void SRT::PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 	this->particle_gun->SetParticleMomentumDirection(direction);
 
 	/* Set particle polarisation*/
-	G4ThreeVector polarisation = direction.cross(G4ThreeVector(0.0, 0.0, 1.0));
-	this->particle_gun->SetParticlePolarization(polarisation);
+	//G4ThreeVector polarisation = direction.cross(G4ThreeVector(0.0, 0.0, 1.0));
+	//this->particle_gun->SetParticlePolarization(polarisation);
 
 	/* Set particle energy*/
 	double energy = this->spectrum_cdf_->lower_bound(G4UniformRand())->second *keV;
