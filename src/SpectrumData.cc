@@ -6,7 +6,7 @@ SRT::SpectrumData::SpectrumData(const std::string& spectrum_file)
 
 	std::stringstream err_msg;
 	err_msg << "Could not open spectrum file: " << spectrum_file << std::endl;
-	if (!spectrum_filestream) throw std::exception(err_msg.str().c_str());
+	if (!spectrum_filestream) throw std::runtime_error(err_msg.str().c_str());
 
 	G4double energy;
 	G4double flux;
@@ -33,7 +33,7 @@ SRT::SpectrumData::SpectrumData(const std::string& spectrum_file)
 
 		err_msg.clear();
 		err_msg << "two entries are required for spectrum file on line: " << line << std::endl;
-		if (values.size() != 2) throw std::exception(err_msg.str().c_str());
+		if (values.size() != 2) throw std::runtime_error(err_msg.str().c_str());
 
 		energy = std::stod(values.at(0));
 		flux = std::stod(values.at(1));
@@ -100,7 +100,7 @@ void SRT::SpectrumData::CheckSpectra(std::map<double, double> spectrum_pdf, std:
 	double epsilon = 1e-4;
 	std::stringstream err_msg;
 	err_msg << "First probability sample in cdf is not 0, is: " << min_cdf->first << std::endl;
-	if (!(std::fabs(min_cdf->first - 0.0) < epsilon)) throw std::exception(err_msg.str().c_str());
+	if (!(std::fabs(min_cdf->first - 0.0) < epsilon)) throw std::runtime_error(err_msg.str().c_str());
 	else
 	{
 		auto value = spectrum_cdf.at(min_cdf->first);
@@ -110,7 +110,7 @@ void SRT::SpectrumData::CheckSpectra(std::map<double, double> spectrum_pdf, std:
 
 	err_msg.clear();
 	err_msg << "Last probability sample in cdf is not 1, is: " << max_cdf->first << std::endl;
-	if (!(std::fabs(max_cdf->first - 1.0) < epsilon)) throw std::exception(err_msg.str().c_str());
+	if (!(std::fabs(max_cdf->first - 1.0) < epsilon)) throw std::runtime_error(err_msg.str().c_str());
 	else
 	{
 		auto value = spectrum_cdf.at(max_cdf->first);

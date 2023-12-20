@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 
 		std::stringstream err_msg;
 		err_msg << "Spectrum file: " << spectrum_file << ", does not exist." << std::endl;
-		if (!std::filesystem::exists(spectrum_file)) throw std::exception(err_msg.str().c_str());
+		if (!std::filesystem::exists(spectrum_file)) throw std::runtime_error(err_msg.str().c_str());
 
 		spectrum_data = new SRT::SpectrumData(spectrum_file);
 	}
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 		if (!(std::filesystem::exists(output_dir)))
 		{
 			try { std::filesystem::create_directories(output_dir); }
-			catch (...) { throw std::exception("Could not create output directory"); }
+			catch (...) { throw std::runtime_error("Could not create output directory"); }
 		}
 
 		std::string filename = "/dose.bin";
@@ -247,7 +247,7 @@ int main(int argc, char* argv[])
 
 			std::stringstream err_msg;
 			err_msg << "Macro file: " << macro_file << ", does not exist." << std::endl;
-			if (!std::filesystem::exists(macro_file)) throw std::exception("Macro file does not exist.");
+			if (!std::filesystem::exists(macro_file)) throw std::runtime_error("Macro file does not exist.");
 			ui_manager->ApplyCommand("/control/execute " + macro_file);
 
 			ui->SessionStart();

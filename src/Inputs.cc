@@ -50,7 +50,7 @@ std::string SRT::Inputs::GetInputValueAsString(const std::string& key)
 {
 	std::stringstream err_msg;
 	err_msg << "Argument: " << key << ", is required but has not been provided." << std::endl;
-	if (!InputsContains(key)) throw std::exception(err_msg.str().c_str());
+	if (!InputsContains(key)) throw std::runtime_error(err_msg.str().c_str());
 	return inputs[key];
 }
 

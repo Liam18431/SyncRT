@@ -1,9 +1,15 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.20)
 
 project(SyncRT)
 
 
-find_package(Geant4 REQUIRED ui_all vis_all)
+option(WITH_GEANT4_UIVIS "Build example with Geant4 UI and Vis drivers" ON)
+if(WITH_GEANT4_UIVIS)
+	find_package(Geant4 REQUIRED ui_all vis_all)
+else()
+	find_package(Geant4 REQUIRED)
+endif()
+
 include(${Geant4_USE_FILE})
 
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)

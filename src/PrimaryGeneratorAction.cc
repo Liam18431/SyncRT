@@ -16,6 +16,15 @@ SRT::PrimaryGeneratorAction::~PrimaryGeneratorAction()
 	delete this->particle_gun;
 }
 
+inline G4ThreeVector SampleSourceOrigin(double sigma_width, double sigma_height)
+{
+	double x = 0;
+	double y = G4RandGauss::shoot(0, sigma_width);
+	double z = G4RandGauss::shoot(0, sigma_height);
+	
+	return G4ThreeVector(x, y, z);
+}
+
 inline G4ThreeVector SampleRectangularSource(double field_width, double field_height)
 {
 	double x = 0;
@@ -61,31 +70,35 @@ inline G4ThreeVector SampleMRTSource(double field_width, double field_height, do
 
 void SRT::PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 {
-	double field_width = 10.0 *mm;
-	double field_height = 10.0 *mm;
-	double microbeam_width = 50 *um;
-	double ctc = 400 *um;
+	double sad = 318.7 * mm;
+	double scd = 118.7 * mm;
+	double field_width = 50.0 *mm;
+	double field_height = 50.0 *mm;
+	double microbeam_width = 0.5 * mm;
+	double ctc = 1.0 * mm;
 	double radius = 5.0f *mm;
 
-	/* Set particle position*/
-	G4ThreeVector offset = G4ThreeVector(-12.0 * cm, 0.0 *cm, 0.0 *cm);
+	/* Get the source origin sample*/
+	G4ThreeVector origin = SampleSourceOrigin(1.0, 0.0);
+	origin.setX(-sad);
 
+	/* Set particle position*/
 	/* MRT */
-	G4ThreeVector sample = SampleMRTSource(field_width, field_height, microbeam_width, ctc);
+	G4ThreeVector position = SampleMRTSource(field_width, field_height, microbeam_width, ctc);
 
 	/* BB */
-	//G4ThreeVector sample = SampleRectangularSource(field_width, field_height);
-	//G4ThreeVector sample = SampleCircularSource(radius);
+	//G4ThreeVector position = SampleRectangularSource(field_width, field_height);
+	//G4ThreeVector position = SampleCircularSource(radius);
 
-	G4ThreeVector position = sample + offset;
+	position.setX(-scd);
 	this->particle_gun->SetParticlePosition(position);
 
 	/* Set particle direction*/
-	G4ThreeVector direction = G4ThreeVector(1.0, 0.0, 0.0);
+	G4ThreeVector direction = position - origin;
 	this->particle_gun->SetParticleMomentumDirection(direction);
 
 	/* Set particle polarisation*/
-	G4ThreeVector polarisation = G4ThreeVector(0.0, 1.0, 0.0);
+	G4ThreeVector polarisation = direction.cross(G4ThreeVector(0.0, 0.0, 1.0));
 	this->particle_gun->SetParticlePolarization(polarisation);
 
 	/* Set particle energy*/

@@ -4,11 +4,11 @@ SRT::VoxelScorer::VoxelScorer(const std::string& output_filename)
 {
 	this->output_filename_ = output_filename;
 	this->output_filestream_ = std::ofstream(this->output_filename_, std::ios::binary | std::ios::out);
-	if (!this->output_filestream_) throw std::exception("Failed to open dose file for output");
+	if (!this->output_filestream_) throw std::runtime_error("Failed to open dose file for output");
 
 	this->pos_ = { 0 *cm, 0 *cm, 0 *cm };
 	this->dim_ = { 20 * cm, 30 * mm, 30 * mm };
-	this->res_ = { 1 * mm, 5 * um, 1 * mm };
+	this->res_ = { 1 * mm, 50 * um, 1 * mm };
 
 	this->size_ = 
 	{
@@ -61,7 +61,7 @@ void SRT::VoxelScorer::AddDose(int bin, double dose)
 #if _DEBUG
 	else
 	{
-		throw std::exception("Bin exceeds dose dimensions.");
+		throw std::runtime_error("Bin exceeds dose dimensions.");
 	}
 #endif
 

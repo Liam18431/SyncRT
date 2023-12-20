@@ -17,7 +17,7 @@
 
 #include "G4VisAttributes.hh"
 
-#include "G4SDmanager.hh"
+#include "G4SDManager.hh"
 
 #include "SensitiveDetector.hh"
 
