@@ -70,16 +70,16 @@ inline G4ThreeVector SampleMRTSource(double field_width, double field_height, do
 
 void SRT::PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 {
-	double sad = 318.7 * mm;
-	double scd = 118.7 * mm;
-	double field_width = 50.0 *mm;
-	double field_height = 50.0 *mm;
-	double microbeam_width = 0.5 * mm;
-	double ctc = 1.0 * mm;
+	double sad = 40768.0 * mm;
+	double scd = 40648.0 * mm;
+	double field_width = 10.0 *mm;
+	double field_height = 10.0 *mm;
+	double microbeam_width = 50 * um;
+	double ctc = 400 * um;
 	double radius = 5.0f *mm;
 
 	/* Get the source origin sample*/
-	G4ThreeVector origin = SampleSourceOrigin(1.0, 0.0);
+	G4ThreeVector origin = SampleSourceOrigin(0.078, 0.0);
 	origin.setX(-sad);
 
 	/* Set particle position*/
@@ -90,11 +90,12 @@ void SRT::PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 	//G4ThreeVector position = SampleRectangularSource(field_width, field_height);
 	//G4ThreeVector position = SampleCircularSource(radius);
 
-	position.setX(-scd);
+	position.setX(-(sad - scd));
 	this->particle_gun->SetParticlePosition(position);
 
 	/* Set particle direction*/
 	G4ThreeVector direction = position - origin;
+	direction.setZ(0);
 	this->particle_gun->SetParticleMomentumDirection(direction);
 
 	/* Set particle polarisation*/
