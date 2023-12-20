@@ -10,15 +10,23 @@ SRT::VoxelScorer::VoxelScorer(const std::string& output_filename)
 	this->dim_ = { 20 * cm, 30 * mm, 30 * mm };
 	this->res_ = { 1 * mm, 5 * um, 1 * mm };
 
-	this->half_dim_ = dim_ / 2.0;
-	this->half_res_ = res_ / 2.0;
-
 	this->size_ = 
 	{
 		static_cast<int>(this->dim_.x() / this->res_.x()),
 		static_cast<int>(this->dim_.y() / this->res_.y()),
 		static_cast<int>(this->dim_.z() / this->res_.z())
 	};
+
+	/* Recompute the dimensions to account for the size of the voxel scorer*/
+	this->dim_ =
+	{
+		this->size_.x * this->res_.x(),
+		this->size_.y * this->res_.y(),
+		this->size_.z * this->res_.z()
+	};
+
+	this->half_dim_ = dim_ / 2.0;
+	this->half_res_ = res_ / 2.0;
 
 	this->size_xy_ = this->size_.x * this->size_.y;
 	this->size_n_ = this->size_xy_ * this->size_.z;
