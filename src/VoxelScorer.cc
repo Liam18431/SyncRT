@@ -8,7 +8,7 @@ SRT::VoxelScorer::VoxelScorer(const std::string& output_filename)
 
 	this->pos_ = { 0 *cm, 0 *cm, 0 *cm };
 	this->dim_ = { 20 * cm, 30 * mm, 30 * mm };
-	this->res_ = { 1 * mm, 50 * um, 1 * mm };
+	this->res_ = { 1 * mm, 5 * um, 1 * mm };
 
 	this->size_ = 
 	{
