@@ -7,7 +7,7 @@ SRT::VoxelScorer::VoxelScorer(const std::string& output_filename)
 	if (!this->output_filestream_) throw std::runtime_error("Failed to open dose file for output");
 
 	this->pos_ = { 0 *cm, 0 *cm, 0 *cm };
-	this->dim_ = { 20 * cm, 30 * mm, 30 * mm };
+	this->dim_ = { 20 * cm, 60 * mm, 60 * mm };
 	this->res_ = { 1 * mm, 50 * um, 1 * mm };
 
 	this->size_ = 
