@@ -15,6 +15,7 @@
 namespace SRT
 {
 	constexpr double pi_ = 3.14159265358979323846264338328;
+	constexpr double tau_ = 6.283185307179586476925286766559;
 
 	class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 	{
