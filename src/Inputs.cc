@@ -33,8 +33,9 @@ void SRT::Inputs::PrintHelp()
 	std::stringstream arg_ss;
 	arg_ss << "\t--help [boolean]:    \tShow help menu (default: false)" << std::endl;
 	arg_ss << "\t--job [int]:         \tJob number (default: 0)" << std::endl;
-	arg_ss << "\t--ncores [int]:      \tThe number of cores to use for a multithreaded simulation." << std::endl;
+	arg_ss << "\t--ncores [int]:      \tThe number of cores to use for a multithreaded simulation. (default: all)" << std::endl;
 	arg_ss << "\t--macro [string]:    \tThe path to the visualisation macro. (default: vis.mac)" << std::endl;
+	arg_ss << "\t--ui [string]:       \tThe UI session type to use in visualisation mode. (default: Qt)" << std::endl;
 	arg_ss << "\t--histories [int]:   \tThe number of histories to simulate in batch mode. Setting this option runs the simulation in batch mode. (default: none)" << std::endl;
 	arg_ss << "\t--spectrum [string]: \tThe spectrum file to use in the simulation. (default: spectrum.dat)" << std::endl;
 	arg_ss << "\t--output [string]:   \tThe output directory for storing the simulation dose data. (default: output/)" << std::endl;

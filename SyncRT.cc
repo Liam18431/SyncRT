@@ -239,7 +239,12 @@ int main(int argc, char* argv[])
 		{
 			std::cout << "Visualisation mode using macro file: " << macro_file << std::endl;
 
-			G4UIExecutive* ui = new G4UIExecutive(argc, argv, "Qt");
+			std::string ui_mode = "Qt";
+			if (SRT::Inputs::InputsContains("--ui"))
+			{
+				ui_mode = SRT::Inputs::GetInputValueAsString("--ui");
+			}
+			G4UIExecutive* ui = new G4UIExecutive(argc, argv, ui_mode);
 			G4VisManager* vis_manager = new G4VisExecutive;
 			G4UImanager* ui_manager = G4UImanager::GetUIpointer();
 
