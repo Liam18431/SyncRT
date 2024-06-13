@@ -19,7 +19,7 @@ cmake --build . --config Release --target install
 
 # Usage
 
-* To start a UI session, run the SyncRT executable (vis.mac and spectrum.dat must be in the current directory).
+* To start a UI session, run the SyncRT executable (a spectrum.dat file must be in the current directory).
 
 * Including the **--histories** command line option will perform a simulation in batch mode:
 ```

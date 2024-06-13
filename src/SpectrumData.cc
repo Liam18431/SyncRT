@@ -4,9 +4,12 @@ SRT::SpectrumData::SpectrumData(const std::string& spectrum_file)
 {
 	std::ifstream spectrum_filestream(spectrum_file, std::ios::in);
 
-	std::stringstream err_msg;
-	err_msg << "Could not open spectrum file: " << spectrum_file << std::endl;
-	if (!spectrum_filestream) throw std::runtime_error(err_msg.str().c_str());
+	if (!spectrum_filestream)
+	{
+		std::stringstream err_msg;
+		err_msg << "Could not open spectrum file: " << spectrum_file << std::endl;
+		throw std::runtime_error(err_msg.str().c_str());
+	}
 
 	G4double energy;
 	G4double flux;
@@ -23,23 +26,30 @@ SRT::SpectrumData::SpectrumData(const std::string& spectrum_file)
 		{
 			n_pos = line.find_first_of(" \t,;", pos);
 			std::string entry = line.substr(pos, n_pos - pos);
+
 			entry.erase(std::remove_if(entry.begin(), entry.end(), isspace), entry.end());
 			if (!entry.empty())
 			{
+				if (entry.at(0) == '#') break;
 				values.push_back(entry);
 			}
 			pos = n_pos + 1;
 		}
 
-		err_msg.clear();
-		err_msg << "two entries are required for spectrum file on line: " << line << std::endl;
-		if (values.size() != 2) throw std::runtime_error(err_msg.str().c_str());
+		if (values.size() != 2)
+		{
+			std::stringstream err_msg;
+			err_msg << "Two entries are required for spectrum file on line: " << line << std::endl;
+			throw std::runtime_error(err_msg.str().c_str());
+		}
 
 		energy = std::stod(values.at(0));
 		flux = std::stod(values.at(1));
 
 		this->spectrum[energy] = flux;
 	}
+
+	if (this->spectrum.size() <= 1) throw std::runtime_error("At least two energy bins are required for spectrum file.");
 
 	this->spectrum_pdf = CalculatePDF(this->spectrum);
 	this->spectrum_cdf = CalculateCDF(this->spectrum_pdf);
@@ -49,8 +59,6 @@ SRT::SpectrumData::SpectrumData(const std::string& spectrum_file)
 
 std::map<double, double> SRT::SpectrumData::CalculatePDF(std::map<double, double> spectrum)
 {
-	std::cout << "Calculate spectrum pdf." << std::endl;
-
 	double init = 0;
 	double flux_sum = std::accumulate(spectrum.begin(), spectrum.end(), init, [](double value, const auto& p) { return value + p.second; });
 	for (auto itr = spectrum.begin(); itr != spectrum.end(); itr++)
@@ -63,8 +71,6 @@ std::map<double, double> SRT::SpectrumData::CalculatePDF(std::map<double, double
 
 std::map<double, double> SRT::SpectrumData::CalculateCDF(std::map<double, double> spectrum_pdf)
 {
-	std::cout << "Calculate spectrum cdf." << std::endl;
-
 	double probability = 0;
 	std::map<double, double> spectrum_cdf;
 	for (auto& bin : spectrum_pdf)
@@ -98,9 +104,12 @@ void SRT::SpectrumData::CheckSpectra(std::map<double, double> spectrum_pdf, std:
 	auto max_cdf = spectrum_cdf.rbegin();
 
 	double epsilon = 1e-4;
-	std::stringstream err_msg;
-	err_msg << "First probability sample in cdf is not 0, is: " << min_cdf->first << std::endl;
-	if (!(std::fabs(min_cdf->first - 0.0) < epsilon)) throw std::runtime_error(err_msg.str().c_str());
+	if (!(std::fabs(min_cdf->first - 0.0) < epsilon))
+	{
+		std::stringstream err_msg;
+		err_msg << "First probability sample in CDF must be 0, is: " << min_cdf->first << std::endl;
+		throw std::runtime_error(err_msg.str().c_str());
+	}
 	else
 	{
 		auto value = spectrum_cdf.at(min_cdf->first);
@@ -108,18 +117,18 @@ void SRT::SpectrumData::CheckSpectra(std::map<double, double> spectrum_pdf, std:
 		spectrum_cdf.insert(spectrum_cdf.begin(), std::make_pair(0.0, value));
 	}
 
-	err_msg.clear();
-	err_msg << "Last probability sample in cdf is not 1, is: " << max_cdf->first << std::endl;
-	if (!(std::fabs(max_cdf->first - 1.0) < epsilon)) throw std::runtime_error(err_msg.str().c_str());
+	if (!(std::fabs(max_cdf->first - 1.0) < epsilon))
+	{
+		std::stringstream err_msg;
+		err_msg << "Last probability sample in CDF must be 1, is: " << max_cdf->first << std::endl;
+		throw std::runtime_error(err_msg.str().c_str());
+	}
 	else
 	{
 		auto value = spectrum_cdf.at(max_cdf->first);
 		spectrum_cdf.erase(max_cdf->first);
 		spectrum_cdf.insert(spectrum_cdf.end(), std::make_pair(1.0, value));
 	}
-
-	std::cout << "Min spectrum CDF (energy, probability sample): " << std::to_string(spectrum_cdf.begin()->second) << ", " << std::to_string(spectrum_cdf.begin()->first) << std::endl;
-	std::cout << "Max spectrum CDF (energy, probability sample): " << std::to_string(spectrum_cdf.rbegin()->second) << ", " << std::to_string(spectrum_cdf.rbegin()->first) << std::endl;
 
 	return;
 }

@@ -51,15 +51,9 @@ int main(int argc, char* argv[])
 		return 2;
 	}
 
-	std::string macro_file = "vis.mac";
 	std::string spectrum_file = "spectrum.dat";
 	try
 	{
-		if (SRT::Inputs::InputsContains("--macro"))
-		{
-			macro_file = SRT::Inputs::GetInputValueAsString("--macro");
-		}
-
 		if (SRT::Inputs::InputsContains("--spectrum"))
 		{
 			spectrum_file = SRT::Inputs::GetInputValueAsString("--spectrum");
@@ -113,9 +107,12 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "Reading spectrum file: " << spectrum_file << std::endl;
 
-		std::stringstream err_msg;
-		err_msg << "Spectrum file: " << spectrum_file << ", does not exist." << std::endl;
-		if (!std::filesystem::exists(spectrum_file)) throw std::runtime_error(err_msg.str().c_str());
+		if (!std::filesystem::exists(spectrum_file))
+		{
+			std::stringstream err_msg;
+			err_msg << "Spectrum file: " << spectrum_file << ", does not exist." << std::endl;
+			throw std::runtime_error(err_msg.str().c_str());
+		}
 
 		spectrum_data = new SRT::SpectrumData(spectrum_file);
 	}
@@ -183,6 +180,9 @@ int main(int argc, char* argv[])
 			}
 		}
 
+		std::cout << "Number of cores: " << n_cores << std::endl;
+		if (n_cores <= 0) throw std::runtime_error("Invalid number of cores.");
+
 		run_manager->SetNumberOfThreads(n_cores);
 #else
 		G4RunManager* run_manager = new G4RunManager();
@@ -237,9 +237,9 @@ int main(int argc, char* argv[])
 		}
 		else  /* UI mode simulation. */
 		{
-			std::cout << "Visualisation mode using macro file: " << macro_file << std::endl;
+			std::cout << "Visualisation mode." << std::endl;
 
-			std::string ui_mode = "Qt";
+			std::string ui_mode = "Qt"; /* Try Qt.*/
 			if (SRT::Inputs::InputsContains("--ui"))
 			{
 				ui_mode = SRT::Inputs::GetInputValueAsString("--ui");
@@ -250,10 +250,45 @@ int main(int argc, char* argv[])
 
 			vis_manager->Initialize();
 
-			std::stringstream err_msg;
-			err_msg << "Macro file: " << macro_file << ", does not exist." << std::endl;
-			if (!std::filesystem::exists(macro_file)) throw std::runtime_error("Macro file does not exist.");
-			ui_manager->ApplyCommand("/control/execute " + macro_file);
+			if (SRT::Inputs::InputsContains("--macro"))
+			{
+				std::string macro_file = SRT::Inputs::GetInputValueAsString("--macro");
+
+				std::cout << "Using macro file: " << macro_file << std::endl;
+				if (!std::filesystem::exists(macro_file)) throw std::runtime_error("Macro file does not exist.");
+
+				ui_manager->ApplyCommand("/control/execute " + macro_file);
+			}
+			else
+			{
+				ui_manager->ApplyCommand("/control/verbose 2");
+				ui_manager->ApplyCommand("/run/verbose 2");
+				ui_manager->ApplyCommand("/vis/verbose errors");
+
+				ui_manager->ApplyCommand("/run/initialize");
+
+				ui_manager->ApplyCommand("/vis/open OGL"); /* Try OpenGL.*/
+
+				ui_manager->ApplyCommand("/vis/drawVolume worlds");
+
+				ui_manager->ApplyCommand("/vis/viewer/set/upVector 0 0 1");
+				ui_manager->ApplyCommand("/vis/viewer/set/targetPoint 0 0 0 mm");
+				ui_manager->ApplyCommand("/vis/viewer/set/viewpointThetaPhi 70 220");
+				ui_manager->ApplyCommand("/vis/viewer/set/lightsVector 0.5 0.3 0.2");
+
+				ui_manager->ApplyCommand("/vis/viewer/set/style surface");
+				ui_manager->ApplyCommand("/vis/viewer/set/auxiliaryEdge true");
+				ui_manager->ApplyCommand("/vis/viewer/set/lineSegmentsPerCircle 100");
+
+				ui_manager->ApplyCommand("/vis/scene/add/trajectories");
+				ui_manager->ApplyCommand("/vis/modeling/trajectories/create/drawByCharge");
+				ui_manager->ApplyCommand("/vis/modeling/trajectories/drawByCharge-0/default/setDrawStepPts true");
+				ui_manager->ApplyCommand("/vis/modeling/trajectories/drawByCharge-0/default/setStepPtsSize 2");
+
+				ui_manager->ApplyCommand("/vis/scene/endOfEventAction accumulate");
+
+				ui_manager->ApplyCommand("/vis/viewer/set/autoRefresh true");
+			}
 
 			ui->SessionStart();
 

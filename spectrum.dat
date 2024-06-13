@@ -1,2 +1,3 @@
-0 0
-100 1
+#Energy (keV), Rel. flux
+0, 0
+100, 1 #100 keV mono-energy photons.

@@ -25,5 +25,4 @@ install(TARGETS ${PROJECT_NAME} DESTINATION ./)
 install(FILES 
 	${PROJECT_SOURCE_DIR}/plot_dose_cube.py
 	${PROJECT_SOURCE_DIR}/spectrum.dat
-	${PROJECT_SOURCE_DIR}/vis.mac
  DESTINATION ./)

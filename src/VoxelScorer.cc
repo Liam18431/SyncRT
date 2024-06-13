@@ -40,6 +40,16 @@ SRT::VoxelScorer::~VoxelScorer()
 {
 }
 
+bool SRT::VoxelScorer::LocalCoordInsideVoxelScorer(const G4ThreeVector& coord, double epsilon)
+{
+	bool outside =
+		((coord.x() < -this->half_dim_.x() + epsilon) || (coord.x() > this->half_dim_.x() - epsilon)) ||
+		((coord.y() < -this->half_dim_.y() + epsilon) || (coord.y() > this->half_dim_.y() - epsilon)) ||
+		((coord.z() < -this->half_dim_.z() + epsilon) || (coord.z() > this->half_dim_.z() - epsilon));
+
+	return !outside;
+}
+
 int SRT::VoxelScorer::GetBinFromLocalCoords(const G4ThreeVector& coords)
 {
 	int index_x = static_cast<int>((coords.x() + this->half_dim_.x()) / this->res_.x());

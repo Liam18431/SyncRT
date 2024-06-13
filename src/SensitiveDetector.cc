@@ -30,8 +30,11 @@ G4bool SRT::SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* his
 
 	G4ThreeVector local_position = post_step_point->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(global_position);
 
-	int bin = this->voxel_scorer_->GetBinFromLocalCoords(local_position);
-	this->dose_map_[bin] += dose;
+	if (this->voxel_scorer_->LocalCoordInsideVoxelScorer(local_position))
+	{
+		int bin = this->voxel_scorer_->GetBinFromLocalCoords(local_position);
+		this->dose_map_[bin] += dose;
+	}
 
 	return true;
 }

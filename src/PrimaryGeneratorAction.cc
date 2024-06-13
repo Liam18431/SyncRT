@@ -122,7 +122,6 @@ void SRT::PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 	double sigma_height = 0.0 * mm;
 	double microbeam_width = 50 * um;
 	double ctc = 400 * um;
-	double radius = 5.0f *mm;
 
 	/* Sample the source*/
 	G4ThreeVector source = SampleSource(sigma_width, sigma_height);

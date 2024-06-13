@@ -17,6 +17,8 @@ namespace SRT
 	public:
 		VoxelScorer(const std::string& output_filename);
 		~VoxelScorer();
+		
+		bool LocalCoordInsideVoxelScorer(const G4ThreeVector& coord, double epsilon = 1 * nm);
 
 		int GetBinFromLocalCoords(const G4ThreeVector& coords);
 
