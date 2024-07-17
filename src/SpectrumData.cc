@@ -14,6 +14,7 @@ SRT::SpectrumData::SpectrumData(const std::string& spectrum_file)
 	G4double energy;
 	G4double flux;
 
+	std::map<double, double> spectrum;
 	std::string line;
 	while (std::getline(spectrum_filestream, line))
 	{
@@ -46,30 +47,36 @@ SRT::SpectrumData::SpectrumData(const std::string& spectrum_file)
 		energy = std::stod(values.at(0));
 		flux = std::stod(values.at(1));
 
-		this->spectrum[energy] = flux;
+		spectrum[energy] = flux;
 	}
 
-	if (this->spectrum.size() <= 1) throw std::runtime_error("At least two energy bins are required for spectrum file.");
+	if (spectrum.size() <= 1) throw std::runtime_error("At least two energy bins are required for spectrum file.");
 
-	this->spectrum_pdf = CalculatePDF(this->spectrum);
-	this->spectrum_cdf = CalculateCDF(this->spectrum_pdf);
+	std::map<double, double> spectrum_pdf = CalculatePDF(spectrum);
+	this->spectrum_cdf_ = CalculateCDF(spectrum_pdf);
 
-	CheckSpectra(this->spectrum_pdf, this->spectrum_cdf);
+	CanonicaliseSpectra(spectrum_pdf, spectrum_cdf_);
 }
 
-std::map<double, double> SRT::SpectrumData::CalculatePDF(std::map<double, double> spectrum)
+std::map<double, double> SRT::SpectrumData::CalculatePDF(const std::map<double, double>& spectrum_)
 {
 	double init = 0;
-	double flux_sum = std::accumulate(spectrum.begin(), spectrum.end(), init, [](double value, const auto& p) { return value + p.second; });
-	for (auto itr = spectrum.begin(); itr != spectrum.end(); itr++)
+	double flux_sum = 0;
+	std::map<double, double> result = spectrum_;
+	for (auto& elm : result)
 	{
-		itr->second /= flux_sum;
+		flux_sum += elm.second;
 	}
 
-	return spectrum;
+	for (auto& elm : result)
+	{
+		elm.second /= flux_sum;
+	}
+
+	return result;
 }
 
-std::map<double, double> SRT::SpectrumData::CalculateCDF(std::map<double, double> spectrum_pdf)
+std::map<double, double> SRT::SpectrumData::CalculateCDF(const std::map<double, double>& spectrum_pdf)
 {
 	double probability = 0;
 	std::map<double, double> spectrum_cdf;
@@ -82,51 +89,67 @@ std::map<double, double> SRT::SpectrumData::CalculateCDF(std::map<double, double
 	return spectrum_cdf;
 }
 
-void SRT::SpectrumData::CheckSpectra(std::map<double, double> spectrum_pdf, std::map<double, double> spectrum_cdf)
+static inline bool ApproxEquals(double v1, double v2, double eps = std::numeric_limits<double>::epsilon())
+{
+	bool result = std::fabs(v1 - v2) < eps;
+
+	return result;
+}
+
+void SRT::SpectrumData::CanonicaliseSpectra(std::map<double, double>& spectrum_pdf, std::map<double, double>& spectrum_cdf)
 {
 	/* sanity checks*/
-	auto min_energy = std::min_element(spectrum.begin(), spectrum.end(), [](const auto& p1, const auto& p2) { return p1.first < p2.first; });
-	std::cout << "Min spectrum energy (keV): " << std::to_string(min_energy->first) << std::endl;
+	double min_energy = std::numeric_limits<double>::max();
+	double max_energy = 0;
+	double max_flux = 0;
+	double peak_energy = 0;
+	double probability_sum = 0;
+	double sum_product = 0;
+	for (auto& elm : spectrum_pdf)
+	{
+		if (elm.first < min_energy) min_energy = elm.first;
+		if (elm.first > max_energy) max_energy = elm.first;
+		if (elm.second > max_flux)
+		{
+			max_flux = elm.second;
+			peak_energy = elm.first;
+		}
 
-	auto max_energy = std::max_element(spectrum.begin(), spectrum.end(), [](const auto& p1, const auto& p2) { return p1.first < p2.first; });
-	std::cout << "Max spectrum energy (keV): " << std::to_string(max_energy->first) << std::endl;
-
-	auto max_flux = std::max_element(spectrum.begin(), spectrum.end(), [](const auto& p1, const auto& p2) { return p1.second < p2.second; });
-	std::cout << "Peak spectrum energy (keV): " << std::to_string(max_flux->first) << std::endl;
-
-	double init = 0.0;
-	double probability_sum = std::accumulate(spectrum.begin(), spectrum.end(), init, [](double value, const auto& p) { return value + p.second; });
-	double sum_product = std::accumulate(spectrum.begin(), spectrum.end(), init, [](double value, const auto& p) { return value + (p.first * p.second); });
+		probability_sum += elm.second;
+		sum_product += elm.first * elm.second;
+	}
 	double weighted_mean_energy = sum_product / probability_sum;
+
+	std::cout << "Min spectrum energy (keV): " << std::to_string(min_energy) << std::endl;
+	std::cout << "Max spectrum energy (keV): " << std::to_string(max_energy) << std::endl;
+	std::cout << "Peak spectrum energy (keV): " << std::to_string(peak_energy) << std::endl;
 	std::cout << "Mean spectrum energy (keV): " + std::to_string(weighted_mean_energy) << std::endl;
 
-	auto min_cdf = spectrum_cdf.begin();
-	auto max_cdf = spectrum_cdf.rbegin();
-
-	double epsilon = 1e-4;
-	if (!(std::fabs(min_cdf->first - 0.0) < epsilon))
+	double min_cdf = spectrum_cdf.begin()->first;
+	double max_cdf = spectrum_cdf.rbegin()->first;
+	if (!ApproxEquals(min_cdf, 0.0, 1e-9))
 	{
 		std::stringstream err_msg;
-		err_msg << "First probability sample in CDF must be 0, is: " << min_cdf->first << std::endl;
+		err_msg << "First probability sample in CDF must be 0, is: " << min_cdf << std::endl;
 		throw std::runtime_error(err_msg.str().c_str());
 	}
 	else
 	{
-		auto value = spectrum_cdf.at(min_cdf->first);
-		spectrum_cdf.erase(min_cdf->first);
+		double value = spectrum_cdf.at(min_cdf);
+		spectrum_cdf.erase(min_cdf);
 		spectrum_cdf.insert(spectrum_cdf.begin(), std::make_pair(0.0, value));
 	}
 
-	if (!(std::fabs(max_cdf->first - 1.0) < epsilon))
+	if (!ApproxEquals(max_cdf, 1.0, 1e-9))
 	{
 		std::stringstream err_msg;
-		err_msg << "Last probability sample in CDF must be 1, is: " << max_cdf->first << std::endl;
+		err_msg << "Last probability sample in CDF must be 1, is: " << max_cdf << std::endl;
 		throw std::runtime_error(err_msg.str().c_str());
 	}
 	else
 	{
-		auto value = spectrum_cdf.at(max_cdf->first);
-		spectrum_cdf.erase(max_cdf->first);
+		double value = spectrum_cdf.at(max_cdf);
+		spectrum_cdf.erase(max_cdf);
 		spectrum_cdf.insert(spectrum_cdf.end(), std::make_pair(1.0, value));
 	}
 
