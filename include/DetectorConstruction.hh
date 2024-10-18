@@ -21,6 +21,8 @@
 
 #include "G4SDManager.hh"
 
+#include "G4ProductionCuts.hh"
+
 #include "SensitiveDetector.hh"
 
 #include "VoxelScorer.hh"
@@ -31,10 +33,5 @@ namespace SRT
 	{
 	public:
 		G4VPhysicalVolume* Construct() override;
-
-		G4Region* GetFineTrackingRegion() const { return this->fine_tracking_region_; }
-
-	private:
-		G4Region* fine_tracking_region_ =0;
 	};
 }

@@ -30,6 +30,7 @@ namespace SRT
 
 		G4ThreeVector GetDimensions() { return this->dim_; }
 		G4ThreeVector GetPosition() { return this->pos_; }
+		G4double GetVoxelVolume() { return this->res_.x() * this->res_.y() * this->res_.z(); }
 
 		std::string GetOutputFilename() { return this->output_filename_; }
 

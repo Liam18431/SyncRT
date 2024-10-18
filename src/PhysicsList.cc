@@ -1,8 +1,7 @@
 #include "PhysicsList.hh"
 
-SRT::PhysicsList::PhysicsList(const DetectorConstruction* detector_construction, const ParallelDetectorConstruction* parallel_detector_construction) : 
-	G4VModularPhysicsList(), 
-	detector_construction_(detector_construction),
+SRT::PhysicsList::PhysicsList(const ParallelDetectorConstruction* parallel_detector_construction) : 
+	G4VModularPhysicsList(),
 	parallel_detector_construction_(parallel_detector_construction)
 {
 	this->em_physics_list = new G4EmLivermorePolarizedPhysics();
@@ -40,25 +39,7 @@ void SRT::PhysicsList::SetCuts()
 	SetCutValue(1 *mm, "e+");
 	SetCutValue(1 *mm, "proton");
 
-	SetRegionCuts();
-
 	DumpCutValuesTable();
-}
-
-void SRT::PhysicsList::SetRegionCuts()
-{
-	G4Region* fine_tracking_region_ = this->detector_construction_->GetFineTrackingRegion();
-
-	G4ProductionCuts* fine_tracking_cuts = new G4ProductionCuts;
-
-	fine_tracking_cuts->SetProductionCut(1 *um, "gamma");
-	fine_tracking_cuts->SetProductionCut(1 *um, "e-");
-	fine_tracking_cuts->SetProductionCut(1 *um, "e+");
-	fine_tracking_cuts->SetProductionCut(1 *um, "proton");
-
-	fine_tracking_region_->SetProductionCuts(fine_tracking_cuts);
-
-	return;
 }
 
 void SRT::PhysicsList::AddParallelWorldProcess()

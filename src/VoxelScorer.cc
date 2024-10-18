@@ -132,14 +132,6 @@ double SRT::VoxelScorer::CalculateUncertainties(unsigned long long int total_n_e
 
 void SRT::VoxelScorer::WriteDose()
 {
-	std::vector out_dose(this->dose_);
-
-	double volume = this->res_.x() * this->res_.y() * this->res_.z();
-	for (int i = 0; i < out_dose.size(); i++)
-	{
-		out_dose[i] = this->dose_[i] / volume; /* Gives dose in 1e-12 Gy.*/
-	}
-
 	/* Write header info*/
 	uint64_t size_n = this->size_n_;
 
@@ -170,7 +162,7 @@ void SRT::VoxelScorer::WriteDose()
 	this->output_filestream_.write(reinterpret_cast<const char*>(&res_z), sizeof(res_z));
 
 	/* Write dose data*/
-	this->output_filestream_.write(reinterpret_cast<const char*>(&out_dose[0]), this->size_n_ * sizeof(double));
+	this->output_filestream_.write(reinterpret_cast<const char*>(&this->dose_[0]), this->size_n_ * sizeof(double));
 
 	/* Write uncertainty data*/
 	this->output_filestream_.write(reinterpret_cast<const char*>(&this->unc_[0]), this->size_n_ * sizeof(double));

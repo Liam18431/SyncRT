@@ -23,5 +23,6 @@ namespace SRT
 	private:
 		VoxelScorer* voxel_scorer_ = nullptr;
 		std::map<int, double> dose_map_;
+		G4double voxel_volume_;
 	};
 }

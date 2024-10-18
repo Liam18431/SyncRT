@@ -20,20 +20,18 @@ namespace SRT
 	class PhysicsList : public G4VModularPhysicsList
 	{
 	public:
-		PhysicsList(const DetectorConstruction* detector_construction, const ParallelDetectorConstruction* parallel_detector_construction);
+		PhysicsList(const ParallelDetectorConstruction* parallel_detector_construction);
 
 		void ConstructProcess() override;
 
 		void SetCuts() override;
 
 	private:
-		void SetRegionCuts();
 		void AddParallelWorldProcess();
 
 		G4EmLivermorePolarizedPhysics* em_physics_list = nullptr;
 		G4DecayPhysics* em_decay_list = nullptr;
 
-		const DetectorConstruction* detector_construction_;
 		const ParallelDetectorConstruction* parallel_detector_construction_;
 	};
 }

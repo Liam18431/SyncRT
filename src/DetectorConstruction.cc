@@ -59,10 +59,18 @@ G4VPhysicalVolume* SRT::DetectorConstruction::Construct()
 	cube_logical->SetVisAttributes(cube_vis);
 
 	/* Fine-tracking region */
-	this->fine_tracking_region_ = new G4Region("FineTrackingRegion");
+	G4Region* fine_tracking_region = new G4Region("FineTrackingRegion");
+	cube_logical->SetRegion(fine_tracking_region);
+	fine_tracking_region->AddRootLogicalVolume(cube_logical);
 
-	cube_logical->SetRegion(this->fine_tracking_region_);
-	this->fine_tracking_region_->AddRootLogicalVolume(cube_logical);
+	G4ProductionCuts* fine_tracking_cuts = new G4ProductionCuts;
+
+	fine_tracking_cuts->SetProductionCut(1 * um, "gamma");
+	fine_tracking_cuts->SetProductionCut(1 * um, "e-");
+	fine_tracking_cuts->SetProductionCut(1 * um, "e+");
+	fine_tracking_cuts->SetProductionCut(1 * um, "proton");
+
+	fine_tracking_region->SetProductionCuts(fine_tracking_cuts);
 	
 	return world_physical;
 }

@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
 
 		run_manager->SetUserInitialization(detector_construction);
 
-		SRT::PhysicsList* physics_list = new SRT::PhysicsList(detector_construction, parallel_detector_construction);
+		SRT::PhysicsList* physics_list = new SRT::PhysicsList(parallel_detector_construction);
 		run_manager->SetUserInitialization(physics_list);
 		
 		run_manager->SetUserInitialization(new SRT::ActionInitialisation(spectrum_data, voxel_scorer));
