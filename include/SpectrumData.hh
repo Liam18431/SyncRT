@@ -9,21 +9,41 @@
 
 #include "G4SystemOfUnits.hh"
 
+#include "Common.hh"
+#include "Utilities.hh"
+
 namespace SRT
 {
 	class SpectrumData
 	{
 	public:
-		SpectrumData(const std::string& spectrum_file);
-		~SpectrumData() {};
+		SpectrumData() = delete;
+		~SpectrumData() = delete;
+		SpectrumData(const SpectrumData&) = delete;
+		SpectrumData& operator = (const SpectrumData&) = delete;
 
-		const std::map<double, double>* GetSpectrumCDF() const { return &this->spectrum_cdf_; }
+		static const std::map<double, double> GetSpectrum();
 
 	private:
-		std::map<double, double> CalculatePDF(const std::map<double, double>& spectrum);
-		std::map<double, double> CalculateCDF(const std::map<double, double>& spectrum_pdf);
-		void CanonicaliseSpectra(std::map<double, double>& spectrum_pdf, std::map<double, double>& spectrum_cdf);
+		template <unsigned int M, unsigned int N>
+		static constexpr double TotalFlux(const double(&spectrum)[M][N])
+		{
+			double result{};
+			for (unsigned int i = 0; i < M; i++)
+			{
+				result += spectrum[i][1];
+			}
 
-		std::map<double, double> spectrum_cdf_;
+			return result;
+		};
+
+		static constexpr double spectrum_[2][2] = /* 100 keV mono energy. */
+		{
+			/* Energy (MeV), Probability/flux */
+			{ 0, 0   },
+			{ 0.1, 1 }
+		};
+		static constexpr unsigned int size_ = sizeof(spectrum_) / sizeof(spectrum_[0]);
+		static constexpr double flux_ = TotalFlux(spectrum_);
 	};
 }

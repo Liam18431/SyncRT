@@ -28,7 +28,7 @@ namespace SRT
 	class ParallelDetectorConstruction : public G4VUserParallelWorld
 	{
 	public:
-		ParallelDetectorConstruction(const G4String& name, VoxelScorer* voxel_scorer) : G4VUserParallelWorld(name), voxel_scorer_(voxel_scorer) {};
+		ParallelDetectorConstruction(const G4String& name) : G4VUserParallelWorld(name) {};
 
 		void Construct() override;
 
@@ -38,6 +38,5 @@ namespace SRT
 
 	private:
 		G4LogicalVolume* voxel_scorer_logical_ = nullptr;
-		VoxelScorer* voxel_scorer_ = nullptr;
 	};
 }

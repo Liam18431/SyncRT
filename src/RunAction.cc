@@ -21,7 +21,7 @@ void SRT::RunAction::EndOfRunAction(const G4Run* run)
 		G4RunManager* run_manager = G4RunManager::GetRunManager();
 		int n_events_in_run = run_manager->GetCurrentRun()->GetNumberOfEvent();
 		this->total_n_events_ += static_cast<unsigned long long int>(n_events_in_run);
-		double avg_unc = this->voxel_scorer_->CalculateUncertainties(this->total_n_events_);
+		double avg_unc = VoxelScorer::CalculateUncertainties(this->total_n_events_);
 		G4cout << "Average uncertainty: " << avg_unc * 100 << " %" << G4endl;
 	}
 	else

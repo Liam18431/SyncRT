@@ -33,5 +33,47 @@ namespace SRT
 	{
 	public:
 		G4VPhysicalVolume* Construct() override;
+	private:
+		static constexpr vec3d world_dim_ =
+		{
+			30 * cm,
+			30 * cm,
+			30 * cm
+		};
+		
+		static constexpr vec3d half_world_dim_ =
+		{
+			0.5 * world_dim_.x,
+			0.5 * world_dim_.y,
+			0.5 * world_dim_.z
+		};
+
+		static constexpr vec3d world_pos_ =
+		{
+			0 * cm,
+			0 * cm,
+			0 * cm
+		};
+
+		static constexpr vec3d  cube_dim_ =
+		{
+			20 * cm,
+			20 * cm,
+			20 * cm
+		};
+
+		static constexpr vec3d half_cube_dim_ =
+		{
+			0.5 * cube_dim_.x,
+			0.5 * cube_dim_.y,
+			0.5 * cube_dim_.z
+		};
+
+		static constexpr vec3d  cube_pos_ =
+		{
+			0 * cm,
+			0 * cm,
+			0 * cm
+		};
 	};
 }

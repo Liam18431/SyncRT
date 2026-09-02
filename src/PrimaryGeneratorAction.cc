@@ -1,7 +1,7 @@
 #include "PrimaryGeneratorAction.hh"
 
-SRT::PrimaryGeneratorAction::PrimaryGeneratorAction(const std::map<double, double>* spectrum_cdf) : 
-	spectrum_cdf_(spectrum_cdf)
+SRT::PrimaryGeneratorAction::PrimaryGeneratorAction(const std::map<double, double>* spectrum) : 
+	spectrum_(spectrum)
 {
 	this->particle_gun = new G4ParticleGun();
 
@@ -16,97 +16,6 @@ SRT::PrimaryGeneratorAction::~PrimaryGeneratorAction()
 	delete this->particle_gun;
 }
 
-static inline G4ThreeVector SampleSource(double sigma_width, double sigma_height)
-{
-	double x = 0;
-	double y = G4RandGauss::shoot(0, sigma_width);
-	double z = G4RandGauss::shoot(0, sigma_height);
-	
-	return G4ThreeVector(x, y, z);
-}
-
-static inline G4ThreeVector SampleRectangularBBField(double field_width, double field_height)
-{
-	double x = 0;
-	double y = G4UniformRand() * field_width - 0.5 * field_width;
-	double z = G4UniformRand() * field_height - 0.5 * field_height;
-
-	return G4ThreeVector(x, y, z);
-}
-
-static inline G4ThreeVector SampleEllipticalBBField(double field_width, double field_height)
-{
-	double x = 0;
-
-	double r = std::sqrt(G4UniformRand());
-	double phi = G4UniformRand() * SRT::tau_;
-
-	double y = r * std::cos(phi) * 0.5 * field_width;
-	double z = r * std::sin(phi) * 0.5 * field_height;
-
-	return G4ThreeVector(x, y, z);
-}
-
-static inline G4ThreeVector SampleRectangularMRTField(double field_width, double field_height, double microbeam_width, double ctc)
-{
-	double x = 0;
-
-	int n_microbeams = static_cast<int>(field_width / ctc);
-
-	if (n_microbeams % 2 == 0) n_microbeams += 1;
-
-	double new_field_width = (n_microbeams - 1) * ctc + microbeam_width;
-
-	int microbeam = static_cast<int>(G4UniformRand() * n_microbeams);
-
-	double microbeam_centre_coord = microbeam * ctc + 0.5 * microbeam_width - 0.5 * new_field_width;
-
-	double y = (microbeam_centre_coord - 0.5 * microbeam_width) + G4UniformRand() * microbeam_width;
-
-	double z = G4UniformRand() * field_height - 0.5 * field_height;
-
-	return G4ThreeVector(x, y, z);
-}
-
-static inline double Square(double val)
-{
-	double result = val * val;
-
-	return result;
-}
-
-static inline bool CoordInsideEllipse(double x, double y, double width, double height)
-{
-	bool result = Square(x) / Square(0.5 * width) + Square(y) / Square(0.5 * height) <= 1.0;
-
-	return result;
-}
-
-/* NOTE: This uses acceptance/rejection and is inefficient. There is probably a better way to do this.*/
-static inline G4ThreeVector SampleEllipticalMRTField(double field_width, double field_height, double microbeam_width, double ctc)
-{
-	double x =0, y, z;
-
-	int n_microbeams = static_cast<int>(field_width / ctc);
-
-	if (n_microbeams % 2 == 0) n_microbeams += 1;
-
-	double new_field_width = (n_microbeams - 1) * ctc + microbeam_width;
-
-	do
-	{
-		int microbeam = static_cast<int>(G4UniformRand() * n_microbeams);
-
-		double microbeam_centre_coord = microbeam * ctc + 0.5 * microbeam_width - 0.5 * new_field_width;
-
-		y = (microbeam_centre_coord - 0.5 * microbeam_width) + G4UniformRand() * microbeam_width;
-
-		z = G4UniformRand() * field_height - 0.5 * field_height;
-	} while (!CoordInsideEllipse(y, z, new_field_width, field_height));
-
-	return G4ThreeVector(x, y, z);
-}
-
 /* NOTE: Beam coord sys:
 	+x = direction
 	+y = horizontal
@@ -114,14 +23,14 @@ static inline G4ThreeVector SampleEllipticalMRTField(double field_width, double 
 */
 void SRT::PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 {
-	double sad = 40768.0 * mm;
-	double scd = 40648.0 * mm;
-	double field_width = 10.0 *mm;
-	double field_height = 10.0 *mm;
-	double sigma_width = 0.078 *mm;
-	double sigma_height = 0.0 * mm;
-	double microbeam_width = 50 * um;
-	double ctc = 400 * um;
+	static constexpr double sad = 40768.0 * mm;
+	static constexpr double scd = 40648.0 * mm;
+	static constexpr double field_width = 10.0 *mm;
+	static constexpr double field_height = 10.0 *mm;
+	static constexpr double sigma_width = 0.078 *mm;
+	static constexpr double sigma_height = 0.0 * mm;
+	static constexpr double microbeam_width = 50 * um;
+	static constexpr double ctc = 400 * um;
 
 	/* Sample the source*/
 	G4ThreeVector source = SampleSource(sigma_width, sigma_height);
@@ -142,8 +51,10 @@ void SRT::PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 	this->particle_gun->SetParticlePolarization(polarisation);
 
 	/* Set particle energy*/
-	double energy = this->spectrum_cdf_->lower_bound(G4UniformRand())->second *keV;
+	double energy = SampleSpectrum(this->spectrum_);
 	this->particle_gun->SetParticleEnergy(energy);
 
 	this->particle_gun->GeneratePrimaryVertex(event);
+
+	return;
 }

@@ -16,6 +16,8 @@
 #include "G4UImanager.hh"
 #include "Randomize.hh"
 
+#include "Common.hh"
+
 #include "Inputs.hh"
 #include "SpectrumData.hh"
 
@@ -28,13 +30,13 @@
 
 int main(int argc, char* argv[])
 {
-	std::cout << "SyncRT" << std::endl;
+	std::cout << "SyncRT v(" << SRT::version_.major << "." << SRT::version_.minor << "." << SRT::version_.patch << ")" << std::endl;
 	
 	try
 	{
 		SRT::Inputs::ParseInputs(argc, argv);
 
-		if (SRT::Inputs::InputsContains("--help") && SRT::Inputs::GetInputValueAsBool("--help"))
+		if (SRT::Inputs::InputsContains("help") && SRT::Inputs::GetInputValueAsBool("help"))
 		{
 			SRT::Inputs::PrintHelp();
 			return 0;
@@ -51,43 +53,16 @@ int main(int argc, char* argv[])
 		return 2;
 	}
 
-	std::string spectrum_file = "spectrum.dat";
-	try
-	{
-		if (SRT::Inputs::InputsContains("--spectrum"))
-		{
-			spectrum_file = SRT::Inputs::GetInputValueAsString("--spectrum");
-		}
-	}
-	catch (std::exception& e)
-	{
-		std::cout << "Failed to set data files: " << e.what() << std::endl;
-		return 1;
-	}
-	catch (...)
-	{
-		std::cout << "Failed to set data files: unhandled exception" << std::endl;
-		return 2;
-	}
-
-	int job_id =0;
 	try
 	{
 		G4Random::setTheEngine(new CLHEP::RanecuEngine);
 
 		G4long seeds[2]{};
 		std::random_device rd;
-		if (SRT::Inputs::InputsContains("--job"))
-		{
-			job_id = SRT::Inputs::GetInputValueAsInt("--job");
-		}
-
-		std::cout << "Job id: " << job_id << std::endl;
-
 		G4double rand = (G4double(rd()) / rd.max());
 		seeds[0] = (G4long)rd();
 		seeds[1] = (G4long)(rd() * rand);
-		G4Random::setTheSeed((G4long)job_id);
+		G4Random::setTheSeed((G4long)0);
 		G4Random::setTheSeeds(seeds);
 		G4Random::showEngineStatus();
 	}
@@ -102,66 +77,12 @@ int main(int argc, char* argv[])
 		return 2;
 	}
 
-	SRT::SpectrumData* spectrum_data;
-	try
-	{
-		std::cout << "Reading spectrum file: " << spectrum_file << std::endl;
-
-		if (!std::filesystem::exists(spectrum_file))
-		{
-			std::stringstream err_msg;
-			err_msg << "Spectrum file: " << spectrum_file << ", does not exist." << std::endl;
-			throw std::runtime_error(err_msg.str().c_str());
-		}
-
-		spectrum_data = new SRT::SpectrumData(spectrum_file);
-	}
-	catch (std::exception& e)
-	{
-		std::cout << "Failed to initialise spectrum data: " << e.what() << std::endl;
-		return 1;
-	}
-	catch (...)
-	{
-		std::cout << "Failed to initialise spectrum data: unhandled exception" << std::endl;
-		return 2;
-	}
-
-	SRT::VoxelScorer* voxel_scorer;
-	try
-	{
-		std::string output_dir = "output/";
-		if (SRT::Inputs::InputsContains("--output"))
-		{
-			output_dir = SRT::Inputs::GetInputValueAsString("--output");
-		}
-		output_dir += "/" + std::to_string(job_id) + "/";
-
-		if (!(std::filesystem::exists(output_dir)))
-		{
-			try { std::filesystem::create_directories(output_dir); }
-			catch (...) { throw std::runtime_error("Could not create output directory"); }
-		}
-
-		std::string filename = "/dose.bin";
-		std::string output_filename = output_dir + filename;
-
-		std::cout << "Voxel scorer output file: " << output_filename << std::endl;
-
-		voxel_scorer = new SRT::VoxelScorer(output_filename);
-	}
-	catch (std::exception& e)
-	{
-		std::cout << "Failed to initialise voxel scorer: " << e.what() << std::endl;
-		return 1;
-	}
-	catch (...)
-	{
-		std::cout << "Failed to initialise voxel scorer: unhandled exception" << std::endl;
-		return 2;
-	}
-
+#ifdef G4MULTITHREADED
 	G4MTRunManager* run_manager;
+#else
+	G4RunManager* run_manager;
+#endif
+
 	try
 	{
 #ifdef G4MULTITHREADED
@@ -169,9 +90,9 @@ int main(int argc, char* argv[])
 		run_manager->SetVerboseLevel(2);
 		int n_cores = G4Threading::G4GetNumberOfCores();
 
-		if (SRT::Inputs::InputsContains("--ncores"))
+		if (SRT::Inputs::InputsContains("ncores"))
 		{
-			n_cores = SRT::Inputs::GetInputValueAsInt("--ncores");
+			n_cores = SRT::Inputs::GetInputValueAsInt("ncores");
 
 			if (n_cores > G4Threading::G4GetNumberOfCores())
 			{
@@ -185,7 +106,7 @@ int main(int argc, char* argv[])
 
 		run_manager->SetNumberOfThreads(n_cores);
 #else
-		G4RunManager* run_manager = new G4RunManager();
+		run_manager = new G4RunManager();
 		run_manager->SetVerboseLevel(2);
 #endif
 	}
@@ -203,7 +124,7 @@ int main(int argc, char* argv[])
 	try
 	{
 		SRT::DetectorConstruction* detector_construction = new SRT::DetectorConstruction();
-		SRT::ParallelDetectorConstruction* parallel_detector_construction = new SRT::ParallelDetectorConstruction("ParallelWorld", voxel_scorer);
+		SRT::ParallelDetectorConstruction* parallel_detector_construction = new SRT::ParallelDetectorConstruction("ParallelWorld");
 
 		detector_construction->RegisterParallelWorld(parallel_detector_construction);
 
@@ -212,7 +133,7 @@ int main(int argc, char* argv[])
 		SRT::PhysicsList* physics_list = new SRT::PhysicsList(parallel_detector_construction);
 		run_manager->SetUserInitialization(physics_list);
 		
-		run_manager->SetUserInitialization(new SRT::ActionInitialisation(spectrum_data, voxel_scorer));
+		run_manager->SetUserInitialization(new SRT::ActionInitialisation());
 	}
 	catch (std::exception& e)
 	{
@@ -228,9 +149,9 @@ int main(int argc, char* argv[])
 	try
 	{
 		G4int n_histories = 0;
-		if (SRT::Inputs::InputsContains("--histories")) /* Batch mode simulation. */
+		if (SRT::Inputs::InputsContains("histories")) /* Batch mode simulation. */
 		{
-			n_histories = SRT::Inputs::GetInputValueAsInt("--histories");
+			n_histories = SRT::Inputs::GetInputValueAsInt("histories");
 			std::cout << "Batch mode using: " << n_histories << " histories." << std::endl;
 			run_manager->Initialize();
 			run_manager->BeamOn(n_histories);
@@ -240,9 +161,9 @@ int main(int argc, char* argv[])
 			std::cout << "Visualisation mode." << std::endl;
 
 			std::string ui_mode = "Qt"; /* Try Qt.*/
-			if (SRT::Inputs::InputsContains("--ui"))
+			if (SRT::Inputs::InputsContains("ui"))
 			{
-				ui_mode = SRT::Inputs::GetInputValueAsString("--ui");
+				ui_mode = SRT::Inputs::GetInputValueAsString("ui");
 			}
 			G4UIExecutive* ui = new G4UIExecutive(argc, argv, ui_mode);
 			G4VisManager* vis_manager = new G4VisExecutive;
@@ -250,9 +171,9 @@ int main(int argc, char* argv[])
 
 			vis_manager->Initialize();
 
-			if (SRT::Inputs::InputsContains("--macro"))
+			if (SRT::Inputs::InputsContains("macro"))
 			{
-				std::string macro_file = SRT::Inputs::GetInputValueAsString("--macro");
+				std::string macro_file = SRT::Inputs::GetInputValueAsString("macro");
 
 				std::cout << "Using macro file: " << macro_file << std::endl;
 				if (!std::filesystem::exists(macro_file)) throw std::runtime_error("Macro file does not exist.");
@@ -267,7 +188,7 @@ int main(int argc, char* argv[])
 
 				ui_manager->ApplyCommand("/run/initialize");
 
-				ui_manager->ApplyCommand("/vis/open OGL"); /* Try OpenGL.*/
+				ui_manager->ApplyCommand("/vis/open");
 
 				ui_manager->ApplyCommand("/vis/drawVolume worlds");
 
@@ -311,8 +232,25 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		std::cout << "Writing dose output to: " << voxel_scorer->GetOutputFilename() << std::endl;
-		voxel_scorer->WriteDose();
+		std::string output_filename = "./dose.dos";
+		if (SRT::Inputs::InputsContains("output"))
+		{
+			output_filename = SRT::Inputs::GetInputValueAsString("output");
+		}
+
+		std::cout << "Writing dose output to: " << output_filename << std::endl;
+
+		std::filesystem::path output_path(output_filename);
+		if (!(std::filesystem::exists(output_path.parent_path())))
+		{
+			try
+			{
+				std::filesystem::create_directories(output_path.parent_path());
+			}
+			catch (...) { throw std::runtime_error("Could not create output directory"); }
+		}
+
+		SRT::VoxelScorer::WriteDose(output_filename);
 	}
 	catch (std::exception& e)
 	{

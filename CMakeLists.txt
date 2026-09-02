@@ -23,6 +23,4 @@ target_link_libraries(${PROJECT_NAME} ${Geant4_LIBRARIES})
 install(TARGETS ${PROJECT_NAME} DESTINATION ./)
 
 install(FILES 
-	${PROJECT_SOURCE_DIR}/plot_dose_cube.py
-	${PROJECT_SOURCE_DIR}/spectrum.dat
  DESTINATION ./)

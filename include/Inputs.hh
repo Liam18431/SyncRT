@@ -7,10 +7,10 @@
 #include <algorithm>
 #include <filesystem>
 
+#include "Common.hh"
+
 namespace SRT 
 {
-	typedef std::map<std::string, std::string> inp_map;
-	
 	class Inputs
 	{
 	public:
@@ -28,6 +28,6 @@ namespace SRT
 		static bool GetInputValueAsBool(const std::string& key);
 
 	private:
-		static inp_map inputs;
+		static strmap inputs_;
 	};
 }

@@ -13,7 +13,7 @@ namespace SRT
 	class SensitiveDetector : public G4VSensitiveDetector
 	{
 	public:
-		SensitiveDetector(const G4String& name, VoxelScorer* voxel_scorer);
+		SensitiveDetector(const G4String& name);
 		~SensitiveDetector();
 
 		void Initialize(G4HCofThisEvent* hit_collection) override;
@@ -21,8 +21,6 @@ namespace SRT
 		void EndOfEvent(G4HCofThisEvent* hit_collection) override;
 
 	private:
-		VoxelScorer* voxel_scorer_ = nullptr;
 		std::map<int, double> dose_map_;
-		G4double voxel_volume_;
 	};
 }

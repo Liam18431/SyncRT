@@ -12,22 +12,21 @@
 
 #include "SpectrumData.hh"
 
+#include "Common.hh"
+#include "Utilities.hh"
+
 namespace SRT
 {
-	constexpr double pi_ = 3.14159265358979323846264338328;
-	constexpr double tau_ = 6.283185307179586476925286766559;
-
 	class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 	{
 	public:
-		PrimaryGeneratorAction(const std::map<double, double>* spectrum_cdf);
+		PrimaryGeneratorAction(const std::map<double, double>* spectrum);
 		~PrimaryGeneratorAction();
 
 		void GeneratePrimaries(G4Event*) override;
 
 	private:
 		G4ParticleGun* particle_gun = nullptr;
-
-		const std::map<double, double>* spectrum_cdf_;
+		const std::map<double, double>* spectrum_;
 	};
 }
