@@ -10,7 +10,7 @@ namespace SRT
 	{
 		int major = 1;
 		int minor = 0;
-		int patch = 0;
+		int patch = 1;
 	} version_;
 
 	constexpr double pi_ = 3.14159265358979323846264338328;

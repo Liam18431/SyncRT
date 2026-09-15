@@ -20,7 +20,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(${PROJECT_NAME} ${Geant4_LIBRARIES})
 
 
-install(TARGETS ${PROJECT_NAME} DESTINATION ./)
-
-install(FILES 
- DESTINATION ./)
+install(TARGETS ${PROJECT_NAME} DESTINATION ".")
